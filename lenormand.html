@@ -97,6 +97,8 @@ dialog::backdrop{background:rgba(10,20,20,.55)}
 .ai-copy:hover{border-color:var(--gold)}
 .ai-copy:focus-visible,.ai-box:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .ai-box{margin:0;max-height:260px;overflow:auto;padding:12px;background:var(--bg);border:1px solid var(--line);border-radius:6px;font-family:ui-monospace,Consolas,"Noto Sans TC",monospace;font-size:13px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+.gt-back{color:var(--gold);border-radius:6px;overflow:hidden}
+.gt-back svg{display:block;width:100%;height:auto;aspect-ratio:5/7}
 footer{border-top:1px solid var(--line);padding-top:16px}
 </style>
 </head>
@@ -332,7 +334,12 @@ function drawThree(){
   openLater([...threeArea.querySelectorAll(".flip")]);
 }
 document.getElementById("drawThree").onclick=drawThree;
-drawThree();
+/* 還沒抽牌時只顯示牌背（蓋著），按下按鈕才抽牌並翻開 */
+function showBacks(){
+  threeArea.innerHTML=`<div class="spread">${["第一張","第二張","第三張"].map(l=>`<div class="slot"><div class="slot-label">${l}</div><div class="flip" role="img" aria-label="牌背，尚未抽牌"><div class="flip-inner"><div class="face back">${BACK}</div></div></div></div>`).join("")}</div><p class="note">牌都蓋著。想好問題後，按「抽三張」。</p>`;
+  document.getElementById("aiThree").hidden=true;
+}
+showBacks();
 
 // 大牌陣 9×4
 const gt=document.getElementById("gt"),gtInfo=document.getElementById("gtInfo"),sigSel=document.getElementById("sig");
@@ -352,7 +359,12 @@ let gtQuestion="";
 function drawGT(){gtQuestion=document.getElementById("gtQ").value.trim();layout=shuffled();renderGT();}
 document.getElementById("drawGT").onclick=drawGT;
 sigSel.onchange=()=>{if(layout.length)renderGT();};
-drawGT();
+function showGTBacks(){
+  gt.innerHTML=Array.from({length:36},()=>`<div class="gt-back" role="img" aria-label="牌背，尚未排牌">${BACK}</div>`).join("");
+  gtInfo.innerHTML=`<p class="note">36 張牌都蓋著。想好問題後，按「排出 36 張」。</p>`;
+  document.getElementById("aiGT").hidden=true;
+}
+showGTBacks();
 
 // 牌庫與彈窗
 const dlg=document.getElementById("dlg");
