@@ -404,7 +404,12 @@ function draw(n){
 }
 document.getElementById("drawThree").onclick=()=>draw(3);
 document.getElementById("drawOne").onclick=()=>draw(1);
-draw(3); // 開啟時先示範一次三張牌陣
+/* 還沒抽牌時只顯示牌背（蓋著），按下按鈕才抽牌並翻開 */
+function showBacks(){
+  area.innerHTML=`<div class="spread">${["過去","現在","未來"].map(l=>`<div class="slot"><div class="slot-label">${l}</div><div class="flip" role="img" aria-label="牌背，尚未抽牌"><div class="flip-inner"><div class="face back">${BACK}</div></div></div></div>`).join("")}</div><p class="note">牌都蓋著。想好問題後，按上方「抽三張」或「抽一張」。</p>`;
+  document.getElementById("aiDraw").hidden=true;
+}
+showBacks();
 
 // 牌庫
 const FILTERS=[["all","全部 78"],["major","大阿爾克那 22"],["wands","權杖 14"],["cups","聖杯 14"],["swords","寶劍 14"],["pentacles","錢幣 14"]];
