@@ -97,6 +97,12 @@ dialog::backdrop{background:rgba(10,20,20,.55)}
 .dlg{display:grid;grid-template-columns:110px 1fr;gap:16px;align-items:start}
 .dlg svg{width:100%;color:var(--ink)}
 @media (max-width:380px){.dlg{grid-template-columns:1fr}.dlg svg{max-width:120px}}
+.ai{display:flex;flex-direction:column;gap:10px;padding:18px;background:var(--surface);border:1px solid var(--line);border-radius:10px;min-width:0}
+.ai h2{font-family:var(--f-head);font-size:18px;margin:0}
+.ai-copy{font:inherit;font-weight:500;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:10px 18px;cursor:pointer;align-self:flex-start}
+.ai-copy:hover{border-color:var(--gold)}
+.ai-copy:focus-visible,.ai-box:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.ai-box{margin:0;max-height:260px;overflow:auto;padding:12px;background:var(--bg);border:1px solid var(--line);border-radius:6px;font-family:ui-monospace,Consolas,"Noto Sans TC",monospace;font-size:13px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
 footer{border-top:1px solid var(--line);padding-top:16px}
 </style>
 </head>
@@ -123,6 +129,13 @@ footer{border-top:1px solid var(--line);padding-top:16px}
       <div class="readings" id="dailyReading"></div>
     </div>
     <p class="note">今日一牌依日期計算，同一天打開看到的是同一張；跨日後更換。</p>
+    <section class="ai" id="aiDaily" aria-labelledby="aiDaily-t" hidden>
+      <h2 id="aiDaily-t">給 AI 解讀</h2>
+      <p class="note">已將本次占卜整理成 AI 可讀格式。本頁不會自動送出，貼到哪個 AI 由你決定。</p>
+      <button type="button" class="ai-copy" data-copy="aiDaily">複製提示詞</button>
+      <p class="note" id="aiDaily-s" aria-live="polite"></p>
+      <pre class="ai-box" tabindex="0" role="region" aria-label="AI 解讀提示詞"><code id="aiDaily-p"></code></pre>
+    </section>
   </section>
 
   <section id="view-draw" hidden>
@@ -134,6 +147,13 @@ footer{border-top:1px solid var(--line);padding-top:16px}
       <button class="btn ghost" id="drawOne">抽一張</button>
     </div>
     <div id="drawArea" class="readings"></div>
+    <section class="ai" id="aiDraw" aria-labelledby="aiDraw-t" hidden>
+      <h2 id="aiDraw-t">給 AI 解讀</h2>
+      <p class="note">已將本次占卜整理成 AI 可讀格式。本頁不會自動送出，貼到哪個 AI 由你決定。</p>
+      <button type="button" class="ai-copy" data-copy="aiDraw">複製提示詞</button>
+      <p class="note" id="aiDraw-s" aria-live="polite"></p>
+      <pre class="ai-box" tabindex="0" role="region" aria-label="AI 解讀提示詞"><code id="aiDraw-p"></code></pre>
+    </section>
   </section>
 
   <section id="view-lib" hidden>
@@ -319,11 +339,55 @@ function openLater(els){
   els.forEach((el,i)=>setTimeout(()=>el.classList.add("open"),reduce?0:150+i*350));
 }
 
+/* ---------- 給 AI 解讀：只顯示與複製文字，不送出任何資料 ---------- */
+function showAi(id,text){
+  document.getElementById(id+"-p").textContent=text;   // 問題原樣放入，一律走 textContent
+  document.querySelector("#"+id+" .ai-box").scrollTop=0;
+  document.getElementById(id+"-s").textContent="";
+  document.getElementById(id).hidden=false;
+}
+async function copyText(text){
+  try{await navigator.clipboard.writeText(text);return true;}catch(e){}
+  const a=document.createElement("textarea");a.value=text;a.setAttribute("readonly","");
+  a.style.cssText="position:fixed;left:-9999px;top:0";document.body.appendChild(a);a.select();
+  let ok=false;try{ok=document.execCommand("copy");}catch(e){}
+  a.remove();return ok;
+}
+document.addEventListener("click",async e=>{
+  const b=e.target.closest("[data-copy]");if(!b)return;
+  const id=b.dataset.copy,code=document.getElementById(id+"-p"),s=document.getElementById(id+"-s");
+  const ok=await copyText(code.textContent);
+  s.textContent=ok?"已複製。":"無法自動複製，請在下方框內全選後手動複製。";
+  if(!ok){const r=document.createRange();r.selectNodeContents(code);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);}
+});
+const NO_Q_STEP=["整體局勢","由於沒有具體問題，請以整體局勢與目前最值得注意的主題為主，不要自行假設使用者是在問感情、工作或財務。"];
+const Q_STEP=["直接回答問題","針對【占問問題】給出明確、具體的解讀，不要只講抽象象徵。"];
+const REMIND_STEP=["實際提醒","列出：\n- 現在較有利的做法\n- 現在需要避免的做法\n- 最值得觀察的訊號"];
+function assemble({intro,rules,question,spread,body,steps}){
+  const q=(question||"").trim(),O=["一","二","三","四","五"];
+  const all=steps.concat([q?Q_STEP:NO_Q_STEP,REMIND_STEP]);
+  return [intro,"","重要：",...rules.map((r,i)=>(i+1)+". "+r),"","【占問問題】",q||"未填寫具體問題。","","【牌陣】",spread,"",...body,"",
+    "請依以下順序解讀：","",...all.flatMap(([t,b],i)=>[O[i]+"、"+t,b,""]),
+    "請不要把象徵性解讀描述成已確定會發生的客觀事件。"].join("\n");
+}
+function tarotPrompt({question,cards,labels,spread}){
+  const multi=cards.length>1;
+  const rules=["不要重新抽牌。","不要另外產生隨機牌。","以下牌面就是本次實際結果，只使用正位，請直接依資料解讀。","請區分「傳統塔羅象徵性詮釋」與客觀事實。","塔羅屬象徵性解讀，目前無法以科學方法驗證其預測能力。","【關鍵字】與【本頁牌義】是本網站自撰的簡短說明，不是特定塔羅書的原文，請勿當成經典引用。"];
+  const steps=[["每張牌的核心意象",multi?"逐張說明每張牌在它所在位置的主要意思。":"說明這張牌的主要意思。"]];
+  if(multi)steps.push(["牌與牌的串連","把牌依「"+labels.join(" → ")+"」的順序串成一條脈絡，不要當成互不相關的牌。"]);
+  return assemble({
+    intro:"請依照塔羅牌的傳統象徵，解讀以下這次已經完成的抽牌結果。",
+    rules,question,spread,steps,
+    body:["【牌面】",...cards.map((c,i)=>[(i+1)+". "+labels[i]+"："+c.zh+" "+c.en+"（"+c.sub+"）","   關鍵字："+c.kw.join("、"),"   本頁牌義："+c.text].join("\n"))]
+  });
+}
+
 // 今日一牌
 (function(){
   const key=todayKey(),c=dailyCard(key),f=document.getElementById("dailyFlip");
   f.innerHTML=flipHTML(c);f.setAttribute("aria-label",c.zh);
   document.getElementById("dailyReading").innerHTML=`<p class="note">${key}</p>`+readingHTML(c,"今日");
+  showAi("aiDaily",tarotPrompt({question:"",cards:[c],labels:["今日一牌"],spread:"今日一牌（日期 "+key+"，同一天固定同一張）"}));
   openLater([f]);
 })();
 
@@ -335,6 +399,7 @@ function draw(n){
   area.innerHTML=(q?`<p class="question">${esc(q)}</p>`:"")+
     `<div class="${n===3?"spread":"single"}">${cards.map((c,i)=>`<div class="slot"><div class="slot-label">${labels[i]}</div><div class="flip" aria-label="${c.zh}">${flipHTML(c)}</div></div>`).join("")}</div>`+
     cards.map((c,i)=>readingHTML(c,labels[i])).join("");
+  showAi("aiDraw",tarotPrompt({question:q,cards,labels,spread:n===3?"三張牌：過去・現在・未來":"單張牌"}));
   openLater([...area.querySelectorAll(".flip")]);
 }
 document.getElementById("drawThree").onclick=()=>draw(3);

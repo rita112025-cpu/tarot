@@ -91,6 +91,12 @@ dialog{border:0;border-radius:12px;background:var(--bg);color:var(--ink);padding
 dialog::backdrop{background:rgba(10,20,20,.55)}
 .dlg{display:grid;grid-template-columns:110px 1fr;gap:16px;align-items:start}
 @media (max-width:380px){.dlg{grid-template-columns:1fr}.dlg .lc{max-width:120px}}
+.ai{display:flex;flex-direction:column;gap:10px;padding:18px;background:var(--surface);border:1px solid var(--line);border-radius:10px;min-width:0}
+.ai h2{font-family:var(--f-head);font-size:18px;margin:0}
+.ai-copy{font:inherit;font-weight:500;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:10px 18px;cursor:pointer;align-self:flex-start}
+.ai-copy:hover{border-color:var(--gold)}
+.ai-copy:focus-visible,.ai-box:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.ai-box{margin:0;max-height:260px;overflow:auto;padding:12px;background:var(--bg);border:1px solid var(--line);border-radius:6px;font-family:ui-monospace,Consolas,"Noto Sans TC",monospace;font-size:13px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
 footer{border-top:1px solid var(--line);padding-top:16px}
 </style>
 </head>
@@ -116,15 +122,30 @@ footer{border-top:1px solid var(--line);padding-top:16px}
       <div class="readings" id="dailyReading"></div>
     </div>
     <p class="note">依日期計算，同一天看到同一張，隔天更換。</p>
+    <section class="ai" id="aiDaily" aria-labelledby="aiDaily-t" hidden>
+      <h2 id="aiDaily-t">給 AI 解讀</h2>
+      <p class="note">已將本次占卜整理成 AI 可讀格式。本頁不會自動送出，貼到哪個 AI 由你決定。</p>
+      <button type="button" class="ai-copy" data-copy="aiDaily">複製提示詞</button>
+      <p class="note" id="aiDaily-s" aria-live="polite"></p>
+      <pre class="ai-box" tabindex="0" role="region" aria-label="AI 解讀提示詞"><code id="aiDaily-p"></code></pre>
+    </section>
   </section>
 
   <section id="view-three" hidden>
     <div class="row"><input type="text" id="q" placeholder="想問的事（可留白）" maxlength="80"></div>
     <div class="row"><button class="btn" id="drawThree">抽三張</button></div>
     <div id="threeArea" class="readings"></div>
+    <section class="ai" id="aiThree" aria-labelledby="aiThree-t" hidden>
+      <h2 id="aiThree-t">給 AI 解讀</h2>
+      <p class="note">已將本次占卜整理成 AI 可讀格式。本頁不會自動送出，貼到哪個 AI 由你決定。</p>
+      <button type="button" class="ai-copy" data-copy="aiThree">複製提示詞</button>
+      <p class="note" id="aiThree-s" aria-live="polite"></p>
+      <pre class="ai-box" tabindex="0" role="region" aria-label="AI 解讀提示詞"><code id="aiThree-p"></code></pre>
+    </section>
   </section>
 
   <section id="view-gt" hidden>
+    <div class="row"><input type="text" id="gtQ" placeholder="想問的事（可留白）" maxlength="80"></div>
     <div class="row">
       <label for="sig" class="note">代表自己的牌</label>
       <select id="sig"><option value="29">29 女士</option><option value="28">28 男士</option></select>
@@ -133,6 +154,13 @@ footer{border-top:1px solid var(--line);padding-top:16px}
     <div class="legend"><span><i class="s"></i>代表牌</span><span><i class="n"></i>上下左右相鄰的牌</span><span>格子右下角數字是牌位 1–36</span></div>
     <div class="gt-wrap"><div class="gt" id="gt"></div></div>
     <div id="gtInfo" class="readings"></div>
+    <section class="ai" id="aiGT" aria-labelledby="aiGT-t" hidden>
+      <h2 id="aiGT-t">給 AI 解讀</h2>
+      <p class="note">已將本次占卜整理成 AI 可讀格式。本頁不會自動送出，貼到哪個 AI 由你決定。</p>
+      <button type="button" class="ai-copy" data-copy="aiGT">複製提示詞</button>
+      <p class="note" id="aiGT-s" aria-live="polite"></p>
+      <pre class="ai-box" tabindex="0" role="region" aria-label="AI 解讀提示詞"><code id="aiGT-p"></code></pre>
+    </section>
     <p class="note">這裡只排出牌位並標出代表牌與相鄰牌，不自動產生整體解讀。大牌陣的宮位、距離等讀法各家不同，未納入。</p>
   </section>
 
@@ -231,23 +259,76 @@ function readingHTML(c,pos){
 }
 function openLater(els){const r=matchMedia("(prefers-reduced-motion: reduce)").matches;els.forEach((el,i)=>setTimeout(()=>el.classList.add("open"),r?0:150+i*350));}
 
+/* ---------- 給 AI 解讀：只顯示與複製文字，不送出任何資料 ---------- */
+function showAi(id,text){
+  document.getElementById(id+"-p").textContent=text;   // 問題原樣放入，一律走 textContent
+  document.querySelector("#"+id+" .ai-box").scrollTop=0;
+  document.getElementById(id+"-s").textContent="";
+  document.getElementById(id).hidden=false;
+}
+async function copyText(text){
+  try{await navigator.clipboard.writeText(text);return true;}catch(e){}
+  const a=document.createElement("textarea");a.value=text;a.setAttribute("readonly","");
+  a.style.cssText="position:fixed;left:-9999px;top:0";document.body.appendChild(a);a.select();
+  let ok=false;try{ok=document.execCommand("copy");}catch(e){}
+  a.remove();return ok;
+}
+document.addEventListener("click",async e=>{
+  const b=e.target.closest("[data-copy]");if(!b)return;
+  const id=b.dataset.copy,code=document.getElementById(id+"-p"),s=document.getElementById(id+"-s");
+  const ok=await copyText(code.textContent);
+  s.textContent=ok?"已複製。":"無法自動複製，請在下方框內全選後手動複製。";
+  if(!ok){const r=document.createRange();r.selectNodeContents(code);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);}
+});
+const NO_Q_STEP=["整體局勢","由於沒有具體問題，請以整體局勢與目前最值得注意的主題為主，不要自行假設使用者是在問感情、工作或財務。"];
+const Q_STEP=["直接回答問題","針對【占問問題】給出明確、具體的解讀，不要只講抽象象徵。"];
+const REMIND_STEP=["實際提醒","列出：\n- 現在較有利的做法\n- 現在需要避免的做法\n- 最值得觀察的訊號"];
+function assemble({intro,rules,question,spread,body,steps}){
+  const q=(question||"").trim(),O=["一","二","三","四","五"];
+  const all=steps.concat([q?Q_STEP:NO_Q_STEP,REMIND_STEP]);
+  return [intro,"","重要：",...rules.map((r,i)=>(i+1)+". "+r),"","【占問問題】",q||"未填寫具體問題。","","【牌陣】",spread,"",...body,"",
+    "請依以下順序解讀：","",...all.flatMap(([t,b],i)=>[O[i]+"、"+t,b,""]),
+    "請不要把象徵性解讀描述成已確定會發生的客觀事件。"].join("\n");
+}
+const LEN_RULES=["不要重新抽牌或重新排牌。","不要另外產生隨機牌。","以下牌面就是本次實際結果，請直接依資料解讀。","請區分「傳統雷諾曼象徵性詮釋」與客觀事實。","雷諾曼屬象徵性解讀，目前無法以科學方法驗證其預測能力。","【關鍵字】與【本頁牌義】是本網站自撰的簡短說明，不是特定雷諾曼書的原文，請勿當成經典引用。","撲克牌角標只是牌面標示，本頁沒有套用撲克牌占卜的讀法。"];
+const lenLine=(c,label)=>[label+"："+c.n+" "+c.zh+" "+c.en+"（"+c.pc+"）","   關鍵字："+c.kw.join("、"),"   本頁牌義："+c.text].join("\n");
+const LEN_INTRO="請依照古典雷諾曼（Petit Lenormand）的傳統象徵，解讀以下這次已經完成的結果。";
+function lenSimplePrompt({question,cards,labels,spread}){
+  const multi=cards.length>1;
+  const steps=[["每張牌的核心意象",multi?"逐張說明每張牌在它所在位置的主要意思。":"說明這張牌的主要意思。"]];
+  if(multi)steps.push(["牌與牌的串連","把牌依「"+labels.join(" → ")+"」的順序連成一段完整的脈絡，不要逐張獨立解釋。"]);
+  return assemble({intro:LEN_INTRO,rules:LEN_RULES,question,spread,steps,
+    body:["【牌面】",...cards.map((c,i)=>lenLine(c,(i+1)+". "+labels[i]))]});
+}
+function gtPrompt({question,layout,si,nb}){
+  const sig=layout[si],r=Math.floor(si/9)+1,col=si%9+1;
+  const rules=LEN_RULES.concat(["牌位的編號、列與欄就是本次實際排列，請勿重排。","大牌陣的宮位、距離、鏡像等讀法各家不同，本頁沒有套用任何一種；若你要採用某種讀法，請先說明是哪一種，不要當成唯一標準。","資訊不足以回答時，請直接說明不足，不要硬編。"]);
+  const body=["【代表牌】",sig.n+" "+sig.zh+"（牌位 "+(si+1)+"，第 "+r+" 列第 "+col+" 欄）","","【全部牌位】（由左到右、由上到下，編號 1–36）"];
+  for(let row=0;row<4;row++){body.push("第 "+(row+1)+" 列：");for(let c=0;c<9;c++){const i=row*9+c,k=layout[i];body.push("  牌位 "+(i+1)+"："+k.n+" "+k.zh+"（"+k.en+"，"+k.pc+"）");}}
+  body.push("","【代表牌上下左右相鄰的牌】",...nb.map(([lab,i])=>lenLine(layout[i],lab+"（牌位 "+(i+1)+"）")),"","【36 張牌的本頁牌義（供對照）】",...DECK.map(c=>c.n+" "+c.zh+"："+c.kw.join("、")+"。"+c.text));
+  return assemble({intro:LEN_INTRO,rules,question,spread:"大牌陣 9×4（36 張全部攤開，共 4 列、每列 9 張）",body,
+    steps:[["代表牌周邊","先讀代表牌與它上下左右相鄰的牌，說明代表牌目前所處的狀態。"],["其他相關的牌","再挑出你認為與問題最相關的牌，並說明依據的牌位，不要憑空指定。"]]});
+}
+
 // 今日一牌
 (function(){
   const key=todayKey(),c=dailyCard(key),f=document.getElementById("dailyFlip");
   f.innerHTML=flipHTML(c);
   document.getElementById("dailyReading").innerHTML=`<p class="note">${key}</p>`+readingHTML(c,"今日");
+  showAi("aiDaily",lenSimplePrompt({question:"",cards:[c],labels:["今日一牌"],spread:"今日一牌（日期 "+key+"，同一天固定同一張）"}));
   openLater([f]);
 })();
 
 // 三張牌
 const threeArea=document.getElementById("threeArea");
 function drawThree(){
-  const q=document.getElementById("q").value.trim(),cards=shuffled().slice(0,3),labels=["第一張","中間（重點）","第三張"];
+  const q=document.getElementById("q").value.trim(),cards=shuffled().slice(0,3),labels=["第一張","第二張","第三張"];
   threeArea.innerHTML=(q?`<p class="question">${esc(q)}</p>`:"")+
     `<div class="spread">${cards.map((c,i)=>`<div class="slot"><div class="slot-label">${labels[i]}</div><div class="flip">${flipHTML(c)}</div></div>`).join("")}</div>`+
     `<p class="chain">${cards.map(c=>c.kw[0]).join("　→　")}</p>`+
-    `<p class="note">雷諾曼常把三張連成一句話來讀，中間那張常當作重點；上面一行是三張牌的第一個關鍵字串起來，方便你自己組句。</p>`+
+    `<p class="note">上面一行是三張牌的第一個關鍵字依序串起來，方便你自己組句。</p>`+
     cards.map((c,i)=>readingHTML(c,labels[i])).join("");
+  showAi("aiThree",lenSimplePrompt({question:q,cards,labels,spread:"三張牌（依序：第一張、第二張、第三張）"}));
   openLater([...threeArea.querySelectorAll(".flip")]);
 }
 document.getElementById("drawThree").onclick=drawThree;
@@ -262,11 +343,13 @@ function renderGT(){
   const sigNo=+sigSel.value,si=layout.findIndex(c=>c.n===sigNo),nb=neighbors(si);
   const nbSet=new Set(nb.map(x=>x[1]));
   gt.innerHTML=layout.map((c,i)=>`<button class="cell${i===si?" sig":nbSet.has(i)?" near":""}" id="cell-${i}" data-i="${i}" aria-label="牌位 ${i+1}：${c.n} ${c.zh}">${face(c,true)}<span class="pos-no">${i+1}</span></button>`).join("");
+  showAi("aiGT",gtPrompt({question:gtQuestion,layout,si,nb}));
   const r=Math.floor(si/9)+1,col=si%9+1;
   gtInfo.innerHTML=`<p class="note">代表牌「${layout[si].n} ${layout[si].zh}」在第 ${r} 列、第 ${col} 欄（牌位 ${si+1}）。</p>`+
     nb.map(([lab,i])=>readingHTML(layout[i],`${lab}・牌位 ${i+1}`)).join("");
 }
-function drawGT(){layout=shuffled();renderGT();}
+let gtQuestion="";
+function drawGT(){gtQuestion=document.getElementById("gtQ").value.trim();layout=shuffled();renderGT();}
 document.getElementById("drawGT").onclick=drawGT;
 sigSel.onchange=()=>{if(layout.length)renderGT();};
 drawGT();
