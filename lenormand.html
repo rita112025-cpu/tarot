@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>古典雷諾曼</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus+SC&family=Noto+Serif+TC:wght@500;700&family=Noto+Sans+TC:wght@400;500&display=swap">
+<style>
+/* Layout: 與塔羅頁同一套色彩；牌面改用純文字排版＋撲克牌角標，大牌陣用 9×4 格線 */
+:root{
+  --bg:#E6EAE4; --surface:#F4F6F2; --ink:#1E3638; --muted:#556866; --line:#C3CCC4;
+  --gold:#9A6F1E; --gold-soft:#E7D7AE; --card:#FBFAF5; --back:#1E3638; --red:#A3392E;
+  --f-display:"Marcellus SC","Noto Serif TC",Georgia,serif;
+  --f-head:"Noto Serif TC","Songti TC","PMingLiU",serif;
+  --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#111C1C; --surface:#182626; --ink:#DCE4DD; --muted:#93A6A2; --line:#2C3E3D;
+  --gold:#D4A64E; --gold-soft:#3A3220; --card:#1D2B2A; --back:#0B1414; --red:#E0796B; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111C1C; --surface:#182626; --ink:#DCE4DD; --muted:#93A6A2; --line:#2C3E3D;
+  --gold:#D4A64E; --gold-soft:#3A3220; --card:#1D2B2A; --back:#0B1414; --red:#E0796B; color-scheme:dark}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7}
+.wrap{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px;display:flex;flex-direction:column;gap:24px}
+header{display:flex;flex-direction:column;gap:4px}
+.home{font-size:13px;color:var(--muted);text-decoration:none;align-self:flex-start;margin-bottom:6px}
+.home:hover{color:var(--gold)}
+.eyebrow{font-family:var(--f-display);letter-spacing:.18em;font-size:12px;color:var(--gold)}
+h1{font-family:var(--f-head);font-weight:700;font-size:30px;line-height:1.25;margin:0;text-wrap:balance}
+p{margin:0}
+.note{font-size:13px;color:var(--muted)}
+nav{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav button{font:inherit;font-size:15px;background:none;border:0;color:var(--muted);padding:10px 12px;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;white-space:nowrap}
+nav button[aria-selected="true"]{color:var(--ink);border-color:var(--gold);font-weight:500}
+button:focus-visible,input:focus-visible,select:focus-visible,.cell:focus-visible,.home:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+section{display:flex;flex-direction:column;gap:18px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.btn{font:inherit;font-weight:500;background:var(--ink);color:var(--bg);border:0;border-radius:6px;padding:10px 18px;cursor:pointer}
+input[type=text],select{font:inherit;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+input[type=text]{flex:1;min-width:0}
+
+/* card face */
+.lc{display:block;width:100%;aspect-ratio:5/7;color:var(--ink)}
+.flip{width:100%;max-width:180px;aspect-ratio:5/7;perspective:900px}
+.flip-inner{position:relative;width:100%;height:100%;transition:transform .7s cubic-bezier(.3,.7,.3,1);transform-style:preserve-3d}
+.flip.open .flip-inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:8px;overflow:hidden}
+.face svg{display:block;width:100%;height:100%}
+.face.front{transform:rotateY(180deg)}
+.face.back svg{color:var(--gold)}
+@media (prefers-reduced-motion:reduce){.flip-inner{transition:none}}
+.slot{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
+.slot-label{font-family:var(--f-head);font-size:13px;color:var(--muted);letter-spacing:.1em}
+
+.daily{display:grid;grid-template-columns:minmax(0,180px) 1fr;gap:24px;align-items:start}
+@media (max-width:520px){.daily{grid-template-columns:1fr}.daily .slot{max-width:180px;margin:0 auto;width:100%}}
+.spread{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.readings{display:flex;flex-direction:column;gap:10px}
+.reading{display:flex;flex-direction:column;gap:6px;padding:14px 16px;background:var(--surface);border-radius:8px;min-width:0}
+.reading .pos{font-size:12px;color:var(--gold);letter-spacing:.12em}
+.reading .nm{font-family:var(--f-head);font-weight:700;font-size:18px}
+.reading .en{font-family:var(--f-display);font-size:13px;color:var(--muted);letter-spacing:.06em}
+.kw{display:flex;gap:6px;flex-wrap:wrap}
+.kw span{font-size:12px;background:var(--gold-soft);color:var(--ink);border-radius:999px;padding:1px 10px}
+.question{font-family:var(--f-head);font-size:16px;border-left:2px solid var(--gold);padding-left:12px}
+.chain{font-family:var(--f-head);font-size:17px}
+
+/* grand tableau */
+.gt-wrap{overflow-x:auto;padding-bottom:4px}
+.gt{display:grid;grid-template-columns:repeat(9,minmax(56px,1fr));gap:6px;min-width:540px}
+.cell{background:none;border:0;padding:0;cursor:pointer;border-radius:6px;position:relative;color:var(--ink)}
+.cell .lc{border-radius:6px}
+.cell.sig{outline:2px solid var(--gold);outline-offset:1px}
+.cell.near{outline:1px dashed var(--gold);outline-offset:1px}
+.cell .pos-no{position:absolute;right:3px;bottom:2px;font-size:9px;color:var(--muted);font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px;margin-right:6px}
+.legend .s{outline:2px solid var(--gold)}
+.legend .n{outline:1px dashed var(--gold)}
+
+/* library */
+.lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:12px}
+.lib button{background:none;border:0;padding:0;cursor:pointer;color:var(--ink);font:inherit;display:flex;flex-direction:column;gap:4px;text-align:center}
+.lib span{font-size:13px}
+dialog{border:0;border-radius:12px;background:var(--bg);color:var(--ink);padding:20px;max-width:min(420px,calc(100vw - 32px));width:100%}
+dialog::backdrop{background:rgba(10,20,20,.55)}
+.dlg{display:grid;grid-template-columns:110px 1fr;gap:16px;align-items:start}
+@media (max-width:380px){.dlg{grid-template-columns:1fr}.dlg .lc{max-width:120px}}
+footer{border-top:1px solid var(--line);padding-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="home" href="./">← 塔羅與雷諾曼</a>
+    <div class="eyebrow">PETIT LENORMAND · 36 CARDS</div>
+    <h1>古典雷諾曼</h1>
+    <p class="note">36 張牌，每張附撲克牌角標。雷諾曼不分正逆位，習慣把相鄰的牌連起來讀。</p>
+  </header>
+
+  <nav role="tablist">
+    <button role="tab" id="tab-daily" aria-selected="true" data-view="daily">今日一牌</button>
+    <button role="tab" id="tab-three" aria-selected="false" data-view="three">三張牌</button>
+    <button role="tab" id="tab-gt" aria-selected="false" data-view="gt">大牌陣 9×4</button>
+    <button role="tab" id="tab-lib" aria-selected="false" data-view="lib">牌庫</button>
+  </nav>
+
+  <section id="view-daily">
+    <div class="daily">
+      <div class="slot"><div class="flip" id="dailyFlip"></div></div>
+      <div class="readings" id="dailyReading"></div>
+    </div>
+    <p class="note">依日期計算，同一天看到同一張，隔天更換。</p>
+  </section>
+
+  <section id="view-three" hidden>
+    <div class="row"><input type="text" id="q" placeholder="想問的事（可留白）" maxlength="80"></div>
+    <div class="row"><button class="btn" id="drawThree">抽三張</button></div>
+    <div id="threeArea" class="readings"></div>
+  </section>
+
+  <section id="view-gt" hidden>
+    <div class="row">
+      <label for="sig" class="note">代表自己的牌</label>
+      <select id="sig"><option value="29">29 女士</option><option value="28">28 男士</option></select>
+      <button class="btn" id="drawGT">排出 36 張</button>
+    </div>
+    <div class="legend"><span><i class="s"></i>代表牌</span><span><i class="n"></i>上下左右相鄰的牌</span><span>格子右下角數字是牌位 1–36</span></div>
+    <div class="gt-wrap"><div class="gt" id="gt"></div></div>
+    <div id="gtInfo" class="readings"></div>
+    <p class="note">這裡只排出牌位並標出代表牌與相鄰牌，不自動產生整體解讀。大牌陣的宮位、距離等讀法各家不同，未納入。</p>
+  </section>
+
+  <section id="view-lib" hidden>
+    <div class="lib" id="lib"></div>
+  </section>
+
+  <footer>
+    <p class="note">牌序與撲克牌對應依常見的 36 張 Petit Lenormand 排列。牌義為依傳統整理的象徵性解讀，僅供自我反思參考，無法以科學方法驗證，也不構成任何醫療、法律或財務判斷。抽牌使用瀏覽器的隨機數產生器。</p>
+  </footer>
+</div>
+
+<dialog id="dlg">
+  <div class="dlg"><div id="dlgArt"></div><div class="readings" id="dlgText"></div></div>
+  <div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn" id="dlgClose">關閉</button></div>
+</dialog>
+
+<script>
+// [編號, 中文, 英文, 撲克牌, 關鍵字, 說明]
+const DATA=[
+[1,"騎士","Rider","9♥","消息、來訪、速度","消息或人很快到來，事情開始動起來。"],
+[2,"幸運草","Clover","6♦","小幸運、機會、短暫","小而短暫的好運，適合把握眼前的機會。"],
+[3,"船","Ship","10♠","旅行、遠方、轉變","移動、遠行，或想往外發展。"],
+[4,"房屋","House","K♥","家、穩定、私人領域","與家庭、居所和安全感有關。"],
+[5,"樹","Tree","7♥","成長、根基、長期","緩慢而長期的成長；傳統上也與身體狀態相關（象徵意義）。"],
+[6,"雲","Clouds","K♣","不明、困惑、暫時阻礙","狀況還不清楚，先別急著判斷。"],
+[7,"蛇","Snake","Q♣","迂迴、複雜、慾望","事情繞路或牽涉複雜關係，留意細節。"],
+[8,"棺材","Coffin","9♦","結束、停滯、休息","某件事告一段落，或需要停下來休息（象徵意義，非字面）。"],
+[9,"花束","Bouquet","Q♠","禮物、讚賞、愉快","收到好意，或發生令人開心的事。"],
+[10,"鐮刀","Scythe","J♦","突然、切斷、決定","快速的決定或突然的變化。"],
+[11,"鞭子","Whip","J♣","爭執、反覆、重複","反覆的討論、衝突或練習。"],
+[12,"鳥","Birds","7♦","交談、溝通、緊張","對話、電話或閒聊，也可能是焦慮不安。"],
+[13,"孩子","Child","J♠","新開始、小、單純","剛開始的事、規模小，或單純的心態。"],
+[14,"狐狸","Fox","9♣","工作、謹慎、策略","與工作有關；也提醒留意是否有算計。"],
+[15,"熊","Bear","10♣","力量、資源、權威","有份量的人或資源，包含財務。"],
+[16,"星星","Stars","6♥","方向、希望、清晰","目標清楚，看得見方向。"],
+[17,"鸛鳥","Stork","Q♥","改變、搬遷、改善","往較好的方向改變或移動。"],
+[18,"狗","Dog","10♥","朋友、忠誠、信任","可信任的朋友或支持者。"],
+[19,"塔","Tower","6♠","機構、權威、距離","公司、政府等正式組織，或與人保持距離。"],
+[20,"花園","Garden","8♠","公眾、社交、聚會","群體、活動與公開場合。"],
+[21,"山","Mountain","8♣","阻礙、延遲、挑戰","遇到需要時間跨越的障礙。"],
+[22,"十字路口","Crossroads","Q♦","選擇、分岔、多個選項","需要在幾條路之間做決定。"],
+[23,"老鼠","Mice","7♣","消耗、損失、壓力","資源或心力正在慢慢被消耗。"],
+[24,"心","Heart","J♥","愛、感情、熱情","感情與真心。"],
+[25,"戒指","Ring","A♣","承諾、合約、循環","約定、合約，或重複的循環。"],
+[26,"書","Book","10♦","秘密、知識、學習","尚未公開的資訊，或需要學習的事。"],
+[27,"信","Letter","7♠","文件、訊息、書面","書面溝通、文件或通知。"],
+[28,"男士","Gentleman","A♥","問卜者、男性","代表問卜者（男性），或事件中的男性。"],
+[29,"女士","Lady","A♠","問卜者、女性","代表問卜者（女性），或事件中的女性。"],
+[30,"百合","Lilies","K♠","成熟、平靜、年長","成熟與和諧，也可指年長或有智慧的人。"],
+[31,"太陽","Sun","A♦","成功、能量、順利","順利，充滿活力。"],
+[32,"月亮","Moon","8♥","名聲、認可、情緒","被看見與肯定，也與情緒相關。"],
+[33,"鑰匙","Key","8♦","解答、關鍵、確定","找到方法，或事情確定會發生。"],
+[34,"魚","Fish","K♦","金錢、交易、流動","財務、生意與資源的流動。"],
+[35,"錨","Anchor","9♠","穩定、持久、扎根","長期穩定，站穩腳步。"],
+[36,"十字架","Cross","6♣","負擔、責任、考驗","沉重的責任，或必須承擔的事。"]
+];
+const DECK=DATA.map(d=>({n:d[0],zh:d[1],en:d[2],pc:d[3],kw:d[4].split("、"),text:d[5]}));
+const byNo=n=>DECK[n-1];
+
+/* ---------- 牌面：純文字排版 ---------- */
+function face(c,compact){
+  const red=/[♥♦]/.test(c.pc);
+  const pcColor=red?"var(--red)":"currentColor";
+  const big=compact?44:52;
+  return `<svg class="lc" viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${c.n} ${c.zh}">
+  <rect x="1" y="1" width="98" height="138" rx="7" fill="var(--card)" stroke="var(--line)" stroke-width="1.2"/>
+  <rect x="6" y="6" width="88" height="128" rx="4" fill="none" stroke="var(--gold)" stroke-width=".6"/>
+  <rect x="10" y="10" width="${c.pc.length>2?24:20}" height="16" rx="2" fill="var(--surface)" stroke="var(--line)" stroke-width=".6"/>
+  <text x="${c.pc.length>2?22:20}" y="22" text-anchor="middle" font-family="Georgia,serif" font-size="10" font-weight="700" fill="${pcColor}">${c.pc}</text>
+  <text x="50" y="${compact?82:80}" text-anchor="middle" font-family="Marcellus SC,Georgia,serif" font-size="${big}" fill="var(--gold)" opacity=".9">${c.n}</text>
+  <text x="50" y="${compact?112:108}" text-anchor="middle" font-family="Noto Serif TC,serif" font-weight="700" font-size="${c.zh.length>3?12:15}" fill="currentColor">${c.zh}</text>
+  ${compact?"":`<text x="50" y="124" text-anchor="middle" font-family="Marcellus SC,Georgia,serif" font-size="8" letter-spacing="1" fill="var(--gold)">${c.en.toUpperCase()}</text>`}
+  </svg>`;
+}
+const BACK=`<svg viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+<rect x="1" y="1" width="98" height="138" rx="7" fill="var(--back)"/>
+<rect x="6" y="6" width="88" height="128" rx="4" fill="none" stroke="currentColor" stroke-width=".6"/>
+<g fill="none" stroke="currentColor" stroke-width=".7">
+${[0,1,2,3,4,5].map(r=>[0,1,2,3,4,5].map(c=>`<rect x="${17+c*11}" y="${37+r*11}" width="9" height="9" rx="1"/>`).join("")).join("")}
+</g><text x="50" y="122" text-anchor="middle" font-family="Marcellus SC,Georgia,serif" font-size="9" letter-spacing="2" fill="currentColor">XXXVI</text></svg>`;
+
+/* ---------- 隨機與日期 ---------- */
+function rand(){const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]/4294967296;}
+function shuffled(){const a=DECK.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function todayKey(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function dailyCard(key){let h=2166136261;for(const ch of "lenormand:"+key){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return DECK[(h>>>0)%36];}
+
+/* ---------- 呈現 ---------- */
+const esc=s=>s.replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const flipHTML=c=>`<div class="flip-inner"><div class="face back">${BACK}</div><div class="face front">${face(c)}</div></div>`;
+function readingHTML(c,pos){
+  return `<div class="reading">${pos?`<div class="pos">${pos}</div>`:""}
+  <div class="nm">${c.n}　${c.zh}</div><div class="en">${c.en} · ${c.pc}</div>
+  <div class="kw">${c.kw.map(k=>`<span>${k}</span>`).join("")}</div><p>${c.text}</p></div>`;
+}
+function openLater(els){const r=matchMedia("(prefers-reduced-motion: reduce)").matches;els.forEach((el,i)=>setTimeout(()=>el.classList.add("open"),r?0:150+i*350));}
+
+// 今日一牌
+(function(){
+  const key=todayKey(),c=dailyCard(key),f=document.getElementById("dailyFlip");
+  f.innerHTML=flipHTML(c);
+  document.getElementById("dailyReading").innerHTML=`<p class="note">${key}</p>`+readingHTML(c,"今日");
+  openLater([f]);
+})();
+
+// 三張牌
+const threeArea=document.getElementById("threeArea");
+function drawThree(){
+  const q=document.getElementById("q").value.trim(),cards=shuffled().slice(0,3),labels=["第一張","中間（重點）","第三張"];
+  threeArea.innerHTML=(q?`<p class="question">${esc(q)}</p>`:"")+
+    `<div class="spread">${cards.map((c,i)=>`<div class="slot"><div class="slot-label">${labels[i]}</div><div class="flip">${flipHTML(c)}</div></div>`).join("")}</div>`+
+    `<p class="chain">${cards.map(c=>c.kw[0]).join("　→　")}</p>`+
+    `<p class="note">雷諾曼常把三張連成一句話來讀，中間那張常當作重點；上面一行是三張牌的第一個關鍵字串起來，方便你自己組句。</p>`+
+    cards.map((c,i)=>readingHTML(c,labels[i])).join("");
+  openLater([...threeArea.querySelectorAll(".flip")]);
+}
+document.getElementById("drawThree").onclick=drawThree;
+drawThree();
+
+// 大牌陣 9×4
+const gt=document.getElementById("gt"),gtInfo=document.getElementById("gtInfo"),sigSel=document.getElementById("sig");
+let layout=[];
+function neighbors(i){const r=Math.floor(i/9),c=i%9,out=[];
+  if(r>0)out.push(["上方",i-9]);if(r<3)out.push(["下方",i+9]);if(c>0)out.push(["左方",i-1]);if(c<8)out.push(["右方",i+1]);return out;}
+function renderGT(){
+  const sigNo=+sigSel.value,si=layout.findIndex(c=>c.n===sigNo),nb=neighbors(si);
+  const nbSet=new Set(nb.map(x=>x[1]));
+  gt.innerHTML=layout.map((c,i)=>`<button class="cell${i===si?" sig":nbSet.has(i)?" near":""}" id="cell-${i}" data-i="${i}" aria-label="牌位 ${i+1}：${c.n} ${c.zh}">${face(c,true)}<span class="pos-no">${i+1}</span></button>`).join("");
+  const r=Math.floor(si/9)+1,col=si%9+1;
+  gtInfo.innerHTML=`<p class="note">代表牌「${layout[si].n} ${layout[si].zh}」在第 ${r} 列、第 ${col} 欄（牌位 ${si+1}）。</p>`+
+    nb.map(([lab,i])=>readingHTML(layout[i],`${lab}・牌位 ${i+1}`)).join("");
+}
+function drawGT(){layout=shuffled();renderGT();}
+document.getElementById("drawGT").onclick=drawGT;
+sigSel.onchange=()=>{if(layout.length)renderGT();};
+drawGT();
+
+// 牌庫與彈窗
+const dlg=document.getElementById("dlg");
+function show(c){document.getElementById("dlgArt").innerHTML=face(c);document.getElementById("dlgText").innerHTML=readingHTML(c,"");dlg.showModal();}
+const lib=document.getElementById("lib");
+lib.innerHTML=DECK.map(c=>`<button data-n="${c.n}" id="lib-${c.n}">${face(c,true)}<span>${c.n} ${c.zh}</span></button>`).join("");
+lib.onclick=e=>{const b=e.target.closest("[data-n]");if(b)show(byNo(+b.dataset.n));};
+gt.onclick=e=>{const b=e.target.closest("[data-i]");if(b)show(layout[+b.dataset.i]);};
+document.getElementById("dlgClose").onclick=()=>dlg.close();
+dlg.addEventListener("click",e=>{if(e.target===dlg)dlg.close();});
+
+// 分頁
+const tabs=document.querySelectorAll("nav button");
+tabs.forEach(t=>t.onclick=()=>{
+  tabs.forEach(x=>x.setAttribute("aria-selected",x===t));
+  ["daily","three","gt","lib"].forEach(v=>document.getElementById("view-"+v).hidden=v!==t.dataset.view);
+});
+</script>
+</body>
+</html>
