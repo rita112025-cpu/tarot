@@ -65,6 +65,7 @@ input[type=text]{font:inherit;flex:1;min-width:0;background:var(--surface);color
 .flip.open .flip-inner{transform:rotateY(180deg)}
 .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:10px;overflow:hidden}
 .face svg{display:block;width:100%;height:100%}
+.face img{display:block;width:100%;height:100%;object-fit:cover}
 .face.front{transform:rotateY(180deg)}
 .face.back svg{color:var(--gold)}
 .face.front svg{color:var(--ink)}
@@ -91,12 +92,14 @@ input[type=text]{font:inherit;flex:1;min-width:0;background:var(--surface);color
 .lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:12px}
 .lib-card{background:none;border:0;padding:0;cursor:pointer;display:flex;flex-direction:column;gap:4px;color:var(--ink);font:inherit;text-align:center;border-radius:8px}
 .lib-card svg{width:100%;aspect-ratio:7/12;color:var(--ink);display:block}
+.lib-card img{width:100%;aspect-ratio:7/12;object-fit:cover;display:block;border-radius:8px}
 .lib-card span{font-size:13px}
 dialog{border:0;border-radius:12px;background:var(--bg);color:var(--ink);padding:20px;max-width:min(420px,calc(100vw - 32px));width:100%}
 dialog::backdrop{background:rgba(10,20,20,.55)}
 .dlg{display:grid;grid-template-columns:110px 1fr;gap:16px;align-items:start}
 .dlg svg{width:100%;color:var(--ink)}
-@media (max-width:380px){.dlg{grid-template-columns:1fr}.dlg svg{max-width:120px}}
+.dlg img{width:100%;aspect-ratio:7/12;object-fit:cover;border-radius:8px}
+@media (max-width:380px){.dlg{grid-template-columns:1fr}.dlg svg,.dlg img{max-width:120px}}
 .ai{display:flex;flex-direction:column;gap:10px;padding:18px;background:var(--surface);border:1px solid var(--line);border-radius:10px;min-width:0}
 .ai h2{font-family:var(--f-head);font-size:18px;margin:0}
 .ai-copy{font:inherit;font-weight:500;background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:10px 18px;cursor:pointer;align-self:flex-start}
@@ -197,6 +200,30 @@ const MAJOR = [
 ["世界","The World","完成、整合、圓滿","一個階段完整結束，準備進入下一輪。"]
 ];
 const ROMAN=["0","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI"];
+const MAJOR_IMAGES=[
+  "金色曙光中的愚者旅人-1.png",
+  "魔術師：無限光輝與四元素秘寶-1.png",
+  "新藝術風格女祭司塔羅牌.png",
+  "新藝術風格女皇塔羅牌.png",
+  "華麗塔羅牌：皇帝人體藝術-2.png",
+  "教皇塔羅牌：金色聖殿與祈禱者-3.png",
+  "塔羅牌《戀人》：花園中的愛之誓言-4.png",
+  "星辰戰車：勝利之途-5.png",
+  "新藝術風格力量塔羅牌-2.png",
+  "星光隱者塔羅牌-3.png",
+  "命運之輪：星辰與四象守護-4.png",
+  "正義塔羅牌：榮耀天秤與寶劍-5.png",
+  "新藝術風格倒吊人塔羅牌-1.png",
+  "十三．死神：月下白马与命运之门-2.png",
+  "節制：雙杯流光的天使畫像-3.png",
+  "華麗新藝術塔羅：惡魔與鎖鏈-4.png",
+  "高塔：雷霆中的崩落塔樓-5.png",
+  "星星牌：月夜祈願之泉-1.png",
+  "月亮之境：星夜塔影與月光狼犬-2.png",
+  "新藝術風格太陽塔羅牌-3.png",
+  "新藝術風審判塔羅牌-4.png",
+  "世界之舞：星辰桂冠塔羅牌-5.png"
+];
 const SUITS = {
  wands:{zh:"權杖",en:"Wands",el:"火元素・行動與熱情",cards:[
   ["靈感、新計畫、動力","新的想法出現，適合把熱情轉成行動。"],
@@ -285,15 +312,6 @@ function frame(inner,top,bottom){
   <text x="70" y="218" text-anchor="middle" font-family="Noto Serif TC,serif" font-weight="700" font-size="15" fill="currentColor">${bottom}</text>
   </svg>`;
 }
-function majorArt(n){
-  const cx=70,cy=118,sides=3+(n%5),R=34;let s="";
-  const pts=[];for(let i=0;i<sides;i++){const a=-Math.PI/2+i*2*Math.PI/sides;pts.push((cx+R*Math.cos(a)).toFixed(1)+","+(cy+R*Math.sin(a)).toFixed(1));}
-  s+=`<circle cx="${cx}" cy="${cy}" r="48" fill="none" stroke="currentColor" stroke-width=".8" opacity=".5"/>`;
-  s+=`<polygon points="${pts.join(" ")}" fill="none" stroke="currentColor" stroke-width="1.4"/>`;
-  s+=`<circle cx="${cx}" cy="${cy}" r="${8+(n%4)*3}" fill="var(--gold)" opacity=".85"/>`;
-  const dots=n===0?0:n;for(let i=0;i<dots;i++){const a=-Math.PI/2+i*2*Math.PI/dots;s+=`<circle cx="${(cx+56*Math.cos(a)).toFixed(1)}" cy="${(cy+56*Math.sin(a)).toFixed(1)}" r="2.2" fill="currentColor"/>`;}
-  return s;
-}
 function minorArt(suit,rank){
   if(rank>=10){
     return `<g transform="translate(70 112) scale(2.6)">${SYM[suit]}</g>
@@ -305,7 +323,7 @@ function minorArt(suit,rank){
   return s;
 }
 function cardSVG(c){
-  if(c.arcana==="major")return frame(majorArt(c.num),ROMAN[c.num],c.zh);
+  if(c.arcana==="major")return `<img src="${encodeURI(MAJOR_IMAGES[c.num])}" alt="${esc(c.zh)}" loading="lazy">`;
   const top=c.rank===0?"A":(c.rank<10?String(c.rank+1):SUITS[c.arcana].en.toUpperCase());
   return frame(minorArt(c.arcana,c.rank),top,c.zh);
 }
