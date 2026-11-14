@@ -275,8 +275,8 @@ Object.entries(SUITS).forEach(([key,s])=>s.cards.forEach((c,r)=>DECK.push({
 const pad2=n=>String(n).padStart(2,"0");
 function cardSrc(c){
   return c.arcana==="major"
-    ?`cards/major-${pad2(c.num)}-${MAJOR_SLUG[c.num]}.png`
-    :`cards/${c.arcana}-${pad2(c.rank+1)}-${RANK_EN[c.rank].toLowerCase()}.png`;
+    ?`cards/major-${pad2(c.num)}-${MAJOR_SLUG[c.num]}.webp`
+    :`cards/${c.arcana}-${pad2(c.rank+1)}-${RANK_EN[c.rank].toLowerCase()}.webp`;
 }
 function cardImg(c){return `<img src="${cardSrc(c)}" alt="${esc(c.zh)}" loading="lazy">`;}
 const BACK=`<svg viewBox="0 0 140 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
