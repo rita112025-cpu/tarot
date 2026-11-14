@@ -15,7 +15,7 @@ img{max-width:100%}
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus+SC&family=Noto+Serif+TC:wght@500;700&family=Noto+Sans+TC:wght@400;500&display=swap">
 <style>
-/* Layout: 單欄閱讀區（最大 760px），上方三個分頁；牌面為程式繪製的抽象 SVG，不使用圖片 */
+/* Layout: 單欄閱讀區（最大 760px），上方三個分頁；牌面為 cards/ 資料夾內的圖片 */
 :root{
   --bg:#E6EAE4; --surface:#F4F6F2; --ink:#1E3638; --muted:#556866; --line:#C3CCC4;
   --gold:#9A6F1E; --gold-soft:#E7D7AE; --card:#FBFAF5; --back:#1E3638;
@@ -165,7 +165,7 @@ footer{border-top:1px solid var(--line);padding-top:16px}
   </section>
 
   <footer>
-    <p class="note">牌義為依塔羅傳統整理的象徵性解讀，僅供自我反思參考，無法以科學方法驗證，也不構成任何醫療、法律或財務判斷。抽牌使用瀏覽器的隨機數產生器；牌面為程式繪製的抽象圖形。</p>
+    <p class="note">牌義為依塔羅傳統整理的象徵性解讀，僅供自我反思參考，無法以科學方法驗證，也不構成任何醫療、法律或財務判斷。抽牌使用瀏覽器的隨機數產生器；牌面為 AI 生成的新藝術風格圖像。</p>
   </footer>
 </div>
 
@@ -200,30 +200,7 @@ const MAJOR = [
 ["世界","The World","完成、整合、圓滿","一個階段完整結束，準備進入下一輪。"]
 ];
 const ROMAN=["0","I","II","III","IV","V","VI","VII","VIII","IX","X","XI","XII","XIII","XIV","XV","XVI","XVII","XVIII","XIX","XX","XXI"];
-const MAJOR_IMAGES=[
-  "金色曙光中的愚者旅人-1.png",
-  "魔術師：無限光輝與四元素秘寶-1.png",
-  "新藝術風格女祭司塔羅牌.png",
-  "新藝術風格女皇塔羅牌.png",
-  "華麗塔羅牌：皇帝人體藝術-2.png",
-  "教皇塔羅牌：金色聖殿與祈禱者-3.png",
-  "塔羅牌《戀人》：花園中的愛之誓言-4.png",
-  "星辰戰車：勝利之途-5.png",
-  "新藝術風格力量塔羅牌-2.png",
-  "星光隱者塔羅牌-3.png",
-  "命運之輪：星辰與四象守護-4.png",
-  "正義塔羅牌：榮耀天秤與寶劍-5.png",
-  "新藝術風格倒吊人塔羅牌-1.png",
-  "十三．死神：月下白马与命运之门-2.png",
-  "節制：雙杯流光的天使畫像-3.png",
-  "華麗新藝術塔羅：惡魔與鎖鏈-4.png",
-  "高塔：雷霆中的崩落塔樓-5.png",
-  "星星牌：月夜祈願之泉-1.png",
-  "月亮之境：星夜塔影與月光狼犬-2.png",
-  "新藝術風格太陽塔羅牌-3.png",
-  "新藝術風審判塔羅牌-4.png",
-  "世界之舞：星辰桂冠塔羅牌-5.png"
-];
+const MAJOR_SLUG=["fool","magician","high-priestess","empress","emperor","hierophant","lovers","chariot","strength","hermit","wheel-of-fortune","justice","hanged-man","death","temperance","devil","tower","star","moon","sun","judgement","world"];
 const SUITS = {
  wands:{zh:"權杖",en:"Wands",el:"火元素・行動與熱情",cards:[
   ["靈感、新計畫、動力","新的想法出現，適合把熱情轉成行動。"],
@@ -288,45 +265,20 @@ const SUITS = {
 };
 const RANK_ZH=["王牌","二","三","四","五","六","七","八","九","十","侍者","騎士","皇后","國王"];
 const RANK_EN=["Ace","Two","Three","Four","Five","Six","Seven","Eight","Nine","Ten","Page","Knight","Queen","King"];
-const COURT_MARK=["侍","騎","后","王"];
 
 const DECK=[];
 MAJOR.forEach((m,i)=>DECK.push({id:i,arcana:"major",num:i,zh:m[0],en:m[1],kw:m[2].split("、"),text:m[3],sub:"大阿爾克那 "+ROMAN[i]}));
 Object.entries(SUITS).forEach(([key,s])=>s.cards.forEach((c,r)=>DECK.push({
   id:DECK.length,arcana:key,rank:r,zh:s.zh+RANK_ZH[r],en:RANK_EN[r]+" of "+s.en,kw:c[0].split("、"),text:c[1],sub:s.zh+"・"+s.el})));
 
-/* ---------- SVG 牌面 ---------- */
-const SYM={
- wands:'<g><rect x="-2" y="-13" width="4" height="26" rx="2" fill="currentColor"/><circle cx="0" cy="-14" r="3" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2 -5 l5 -3 M-2 2 l-5 -3" stroke="currentColor" stroke-width="1.4" fill="none"/></g>',
- cups:'<g><path d="M-8 -10 L8 -10 Q8 3 0 3 Q-8 3 -8 -10Z" fill="currentColor"/><rect x="-1" y="3" width="2" height="6" fill="currentColor"/><rect x="-5" y="9" width="10" height="2" rx="1" fill="currentColor"/></g>',
- swords:'<g><path d="M0 -14 L2.4 4 L-2.4 4Z" fill="currentColor"/><rect x="-7" y="4" width="14" height="2" rx="1" fill="currentColor"/><rect x="-1" y="6" width="2" height="7" fill="currentColor"/></g>',
- pentacles:'<g><circle r="10" fill="none" stroke="currentColor" stroke-width="1.6"/><polygon points="0,-7.5 1.8,-2.4 7.1,-2.3 2.9,0.9 4.4,6.1 0,3 -4.4,6.1 -2.9,0.9 -7.1,-2.3 -1.8,-2.4" fill="currentColor"/></g>'
-};
-const LAYOUT={1:[1],2:[1,1],3:[1,1,1],4:[2,2],5:[2,1,2],6:[2,2,2],7:[2,3,2],8:[3,2,3],9:[3,3,3],10:[3,4,3]};
-function frame(inner,top,bottom){
-  return `<svg viewBox="0 0 140 240" xmlns="http://www.w3.org/2000/svg" role="img">
-  <rect x="1" y="1" width="138" height="238" rx="10" fill="var(--card)" stroke="var(--line)" stroke-width="1.5"/>
-  <rect x="8" y="8" width="124" height="224" rx="6" fill="none" stroke="var(--gold)" stroke-width=".8"/>
-  <text x="70" y="30" text-anchor="middle" font-family="Marcellus SC,Georgia,serif" font-size="13" fill="var(--gold)" letter-spacing="1.5">${top}</text>
-  ${inner}
-  <text x="70" y="218" text-anchor="middle" font-family="Noto Serif TC,serif" font-weight="700" font-size="15" fill="currentColor">${bottom}</text>
-  </svg>`;
+/* ---------- 牌面圖片 ---------- */
+const pad2=n=>String(n).padStart(2,"0");
+function cardSrc(c){
+  return c.arcana==="major"
+    ?`cards/major-${pad2(c.num)}-${MAJOR_SLUG[c.num]}.png`
+    :`cards/${c.arcana}-${pad2(c.rank+1)}-${RANK_EN[c.rank].toLowerCase()}.png`;
 }
-function minorArt(suit,rank){
-  if(rank>=10){
-    return `<g transform="translate(70 112) scale(2.6)">${SYM[suit]}</g>
-    <text x="70" y="182" text-anchor="middle" font-family="Noto Serif TC,serif" font-size="18" fill="var(--gold)">${COURT_MARK[rank-10]}</text>`;
-  }
-  const n=rank+1,rows=LAYOUT[n],top=58,bot=180,h=(bot-top)/rows.length;let s="";
-  if(n===1)return `<g transform="translate(70 118) scale(3)">${SYM[suit]}</g>`;
-  rows.forEach((c,ri)=>{const y=top+h*(ri+.5);for(let i=0;i<c;i++){const x=70+(i-(c-1)/2)*34;s+=`<g transform="translate(${x} ${y.toFixed(1)}) scale(1.05)">${SYM[suit]}</g>`;}});
-  return s;
-}
-function cardSVG(c){
-  if(c.arcana==="major")return `<img src="${encodeURI(MAJOR_IMAGES[c.num])}" alt="${esc(c.zh)}" loading="lazy">`;
-  const top=c.rank===0?"A":(c.rank<10?String(c.rank+1):SUITS[c.arcana].en.toUpperCase());
-  return frame(minorArt(c.arcana,c.rank),top,c.zh);
-}
+function cardImg(c){return `<img src="${cardSrc(c)}" alt="${esc(c.zh)}" loading="lazy">`;}
 const BACK=`<svg viewBox="0 0 140 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 <rect x="1" y="1" width="138" height="238" rx="10" fill="var(--back)"/>
 <rect x="8" y="8" width="124" height="224" rx="6" fill="none" stroke="currentColor" stroke-width=".8"/>
@@ -344,7 +296,7 @@ function dailyCard(key){let h=2166136261;for(const ch of key){h^=ch.charCodeAt(0
 
 /* ---------- 呈現 ---------- */
 const esc=s=>s.replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
-function flipHTML(c){return `<div class="flip-inner"><div class="face back">${BACK}</div><div class="face front">${cardSVG(c)}</div></div>`;}
+function flipHTML(c){return `<div class="flip-inner"><div class="face back">${BACK}</div><div class="face front">${cardImg(c)}</div></div>`;}
 function readingHTML(c,pos){
   return `<div class="reading">${pos?`<div class="pos">${pos}</div>`:""}
   <div class="nm">${c.zh}</div><div class="en">${c.en}</div>
@@ -435,12 +387,12 @@ const fEl=document.getElementById("filters"),lib=document.getElementById("lib");
 let cur="all";
 function renderLib(){
   fEl.innerHTML=FILTERS.map(([k,l])=>`<button class="chip" id="f-${k}" data-f="${k}" aria-pressed="${k===cur}">${l}</button>`).join("");
-  lib.innerHTML=DECK.filter(c=>cur==="all"||c.arcana===cur).map(c=>`<button class="lib-card" data-id="${c.id}">${cardSVG(c)}<span>${c.zh}</span></button>`).join("");
+  lib.innerHTML=DECK.filter(c=>cur==="all"||c.arcana===cur).map(c=>`<button class="lib-card" data-id="${c.id}">${cardImg(c)}<span>${c.zh}</span></button>`).join("");
 }
 fEl.onclick=e=>{const b=e.target.closest("[data-f]");if(b){cur=b.dataset.f;renderLib();}};
 const dlg=document.getElementById("dlg");
 lib.onclick=e=>{const b=e.target.closest("[data-id]");if(!b)return;const c=DECK[+b.dataset.id];
-  document.getElementById("dlgArt").innerHTML=cardSVG(c);document.getElementById("dlgText").innerHTML=readingHTML(c,"");dlg.showModal();};
+  document.getElementById("dlgArt").innerHTML=cardImg(c);document.getElementById("dlgText").innerHTML=readingHTML(c,"");dlg.showModal();};
 document.getElementById("dlgClose").onclick=()=>dlg.close();
 dlg.addEventListener("click",e=>{if(e.target===dlg)dlg.close();});
 renderLib();
