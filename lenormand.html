@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus+SC&family=Noto+Serif+TC:wght@500;700&family=Noto+Sans+TC:wght@400;500&display=swap">
 <style>
-/* Layout: 與塔羅頁同一套色彩；牌面改用純文字排版＋撲克牌角標，大牌陣用 9×4 格線 */
+/* Layout: 與塔羅頁同一套色彩；牌面為 cards/ 資料夾內的圖片（圖上已有撲克牌角標），大牌陣用 9×4 格線 */
 :root{
   --bg:#E6EAE4; --surface:#F4F6F2; --ink:#1E3638; --muted:#556866; --line:#C3CCC4;
   --gold:#9A6F1E; --gold-soft:#E7D7AE; --card:#FBFAF5; --back:#1E3638; --red:#A3392E;
@@ -45,8 +45,8 @@ input[type=text],select{font:inherit;background:var(--surface);color:var(--ink);
 input[type=text]{flex:1;min-width:0}
 
 /* card face */
-.lc{display:block;width:100%;aspect-ratio:5/7;color:var(--ink)}
-.flip{width:100%;max-width:180px;aspect-ratio:5/7;perspective:900px}
+.lc{display:block;width:100%;aspect-ratio:2/3;object-fit:cover}
+.flip{width:100%;max-width:180px;aspect-ratio:2/3;perspective:900px}
 .flip-inner{position:relative;width:100%;height:100%;transition:transform .7s cubic-bezier(.3,.7,.3,1);transform-style:preserve-3d}
 .flip.open .flip-inner{transform:rotateY(180deg)}
 .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:8px;overflow:hidden}
@@ -98,7 +98,7 @@ dialog::backdrop{background:rgba(10,20,20,.55)}
 .ai-copy:focus-visible,.ai-box:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 .ai-box{margin:0;max-height:260px;overflow:auto;padding:12px;background:var(--bg);border:1px solid var(--line);border-radius:6px;font-family:ui-monospace,Consolas,"Noto Sans TC",monospace;font-size:13px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
 .gt-back{color:var(--gold);border-radius:6px;overflow:hidden}
-.gt-back svg{display:block;width:100%;height:auto;aspect-ratio:5/7}
+.gt-back svg{display:block;width:100%;height:auto;aspect-ratio:2/3}
 footer{border-top:1px solid var(--line);padding-top:16px}
 </style>
 </head>
@@ -223,27 +223,17 @@ const DATA=[
 const DECK=DATA.map(d=>({n:d[0],zh:d[1],en:d[2],pc:d[3],kw:d[4].split("、"),text:d[5]}));
 const byNo=n=>DECK[n-1];
 
-/* ---------- 牌面：純文字排版 ---------- */
-function face(c,compact){
-  const red=/[♥♦]/.test(c.pc);
-  const pcColor=red?"var(--red)":"currentColor";
-  const big=compact?44:52;
-  return `<svg class="lc" viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${c.n} ${c.zh}">
-  <rect x="1" y="1" width="98" height="138" rx="7" fill="var(--card)" stroke="var(--line)" stroke-width="1.2"/>
-  <rect x="6" y="6" width="88" height="128" rx="4" fill="none" stroke="var(--gold)" stroke-width=".6"/>
-  <rect x="10" y="10" width="${c.pc.length>2?24:20}" height="16" rx="2" fill="var(--surface)" stroke="var(--line)" stroke-width=".6"/>
-  <text x="${c.pc.length>2?22:20}" y="22" text-anchor="middle" font-family="Georgia,serif" font-size="10" font-weight="700" fill="${pcColor}">${c.pc}</text>
-  <text x="50" y="${compact?82:80}" text-anchor="middle" font-family="Marcellus SC,Georgia,serif" font-size="${big}" fill="var(--gold)" opacity=".9">${c.n}</text>
-  <text x="50" y="${compact?112:108}" text-anchor="middle" font-family="Noto Serif TC,serif" font-weight="700" font-size="${c.zh.length>3?12:15}" fill="currentColor">${c.zh}</text>
-  ${compact?"":`<text x="50" y="124" text-anchor="middle" font-family="Marcellus SC,Georgia,serif" font-size="8" letter-spacing="1" fill="var(--gold)">${c.en.toUpperCase()}</text>`}
-  </svg>`;
+/* ---------- 牌面圖片 ---------- */
+const SLUG="rider clover ship house tree clouds snake coffin bouquet scythe whip birds child fox bear stars stork dog tower garden mountain crossroads mice heart ring book letter gentleman lady lilies sun moon key fish anchor cross".split(" ");
+function face(c){
+  return `<img class="lc" src="cards/lenormand-${String(c.n).padStart(2,"0")}-${SLUG[c.n-1]}.webp" alt="${c.n} ${c.zh}" loading="lazy">`;
 }
-const BACK=`<svg viewBox="0 0 100 140" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-<rect x="1" y="1" width="98" height="138" rx="7" fill="var(--back)"/>
-<rect x="6" y="6" width="88" height="128" rx="4" fill="none" stroke="currentColor" stroke-width=".6"/>
+const BACK=`<svg viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+<rect x="1" y="1" width="98" height="148" rx="7" fill="var(--back)"/>
+<rect x="6" y="6" width="88" height="138" rx="4" fill="none" stroke="currentColor" stroke-width=".6"/>
 <g fill="none" stroke="currentColor" stroke-width=".7">
-${[0,1,2,3,4,5].map(r=>[0,1,2,3,4,5].map(c=>`<rect x="${17+c*11}" y="${37+r*11}" width="9" height="9" rx="1"/>`).join("")).join("")}
-</g><text x="50" y="122" text-anchor="middle" font-family="Marcellus SC,Georgia,serif" font-size="9" letter-spacing="2" fill="currentColor">XXXVI</text></svg>`;
+${[0,1,2,3,4,5].map(r=>[0,1,2,3,4,5].map(c=>`<rect x="${17+c*11}" y="${42+r*11}" width="9" height="9" rx="1"/>`).join("")).join("")}
+</g><text x="50" y="132" text-anchor="middle" font-family="Marcellus SC,Georgia,serif" font-size="9" letter-spacing="2" fill="currentColor">XXXVI</text></svg>`;
 
 /* ---------- 隨機與日期 ---------- */
 function rand(){const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]/4294967296;}
@@ -349,7 +339,7 @@ function neighbors(i){const r=Math.floor(i/9),c=i%9,out=[];
 function renderGT(){
   const sigNo=+sigSel.value,si=layout.findIndex(c=>c.n===sigNo),nb=neighbors(si);
   const nbSet=new Set(nb.map(x=>x[1]));
-  gt.innerHTML=layout.map((c,i)=>`<button class="cell${i===si?" sig":nbSet.has(i)?" near":""}" id="cell-${i}" data-i="${i}" aria-label="牌位 ${i+1}：${c.n} ${c.zh}">${face(c,true)}<span class="pos-no">${i+1}</span></button>`).join("");
+  gt.innerHTML=layout.map((c,i)=>`<button class="cell${i===si?" sig":nbSet.has(i)?" near":""}" id="cell-${i}" data-i="${i}" aria-label="牌位 ${i+1}：${c.n} ${c.zh}">${face(c)}<span class="pos-no">${i+1}</span></button>`).join("");
   showAi("aiGT",gtPrompt({question:gtQuestion,layout,si,nb}));
   const r=Math.floor(si/9)+1,col=si%9+1;
   gtInfo.innerHTML=`<p class="note">代表牌「${layout[si].n} ${layout[si].zh}」在第 ${r} 列、第 ${col} 欄（牌位 ${si+1}）。</p>`+
@@ -370,7 +360,7 @@ showGTBacks();
 const dlg=document.getElementById("dlg");
 function show(c){document.getElementById("dlgArt").innerHTML=face(c);document.getElementById("dlgText").innerHTML=readingHTML(c,"");dlg.showModal();}
 const lib=document.getElementById("lib");
-lib.innerHTML=DECK.map(c=>`<button data-n="${c.n}" id="lib-${c.n}">${face(c,true)}<span>${c.n} ${c.zh}</span></button>`).join("");
+lib.innerHTML=DECK.map(c=>`<button data-n="${c.n}" id="lib-${c.n}">${face(c)}<span>${c.n} ${c.zh}</span></button>`).join("");
 lib.onclick=e=>{const b=e.target.closest("[data-n]");if(b)show(byNo(+b.dataset.n));};
 gt.onclick=e=>{const b=e.target.closest("[data-i]");if(b)show(layout[+b.dataset.i]);};
 document.getElementById("dlgClose").onclick=()=>dlg.close();
