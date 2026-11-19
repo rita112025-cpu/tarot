@@ -226,7 +226,7 @@ const byNo=n=>DECK[n-1];
 /* ---------- 牌面圖片 ---------- */
 const SLUG="rider clover ship house tree clouds snake coffin bouquet scythe whip birds child fox bear stars stork dog tower garden mountain crossroads mice heart ring book letter gentleman lady lilies sun moon key fish anchor cross".split(" ");
 function face(c){
-  return `<img class="lc" src="cards/lenormand-${String(c.n).padStart(2,"0")}-${SLUG[c.n-1]}.webp" alt="${c.n} ${c.zh}" loading="lazy">`;
+  return `<img class="lc" src="cards/thumb/lenormand-${String(c.n).padStart(2,"0")}-${SLUG[c.n-1]}.webp" alt="${c.n} ${c.zh}" loading="lazy">`;
 }
 const BACK=`<svg viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 <rect x="1" y="1" width="98" height="148" rx="7" fill="var(--back)"/>

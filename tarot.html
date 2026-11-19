@@ -7,7 +7,7 @@
 <style>
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0}
-img{max-width:100%}
+img{max-width:100%;height:auto}
 [hidden]{display:none!important}
 </style>
 <title>七十八張塔羅</title>
@@ -60,7 +60,7 @@ input[type=text]{font:inherit;flex:1;min-width:0;background:var(--surface);color
 /* card */
 .slot{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0}
 .slot-label{font-family:var(--f-head);font-size:13px;color:var(--muted);letter-spacing:.1em}
-.flip{width:100%;max-width:200px;aspect-ratio:7/12;perspective:900px}
+.flip{width:100%;max-width:200px;aspect-ratio:2/3;perspective:900px}
 .flip-inner{position:relative;width:100%;height:100%;transition:transform .7s cubic-bezier(.3,.7,.3,1);transform-style:preserve-3d}
 .flip.open .flip-inner{transform:rotateY(180deg)}
 .face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:10px;overflow:hidden}
@@ -91,14 +91,14 @@ input[type=text]{font:inherit;flex:1;min-width:0;background:var(--surface);color
 .chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 .lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:12px}
 .lib-card{background:none;border:0;padding:0;cursor:pointer;display:flex;flex-direction:column;gap:4px;color:var(--ink);font:inherit;text-align:center;border-radius:8px}
-.lib-card svg{width:100%;aspect-ratio:7/12;color:var(--ink);display:block}
-.lib-card img{width:100%;aspect-ratio:7/12;object-fit:cover;display:block;border-radius:8px}
+.lib-card svg{width:100%;aspect-ratio:2/3;color:var(--ink);display:block}
+.lib-card img{width:100%;aspect-ratio:2/3;object-fit:cover;display:block;border-radius:8px}
 .lib-card span{font-size:13px}
 dialog{border:0;border-radius:12px;background:var(--bg);color:var(--ink);padding:20px;max-width:min(420px,calc(100vw - 32px));width:100%}
 dialog::backdrop{background:rgba(10,20,20,.55)}
 .dlg{display:grid;grid-template-columns:110px 1fr;gap:16px;align-items:start}
 .dlg svg{width:100%;color:var(--ink)}
-.dlg img{width:100%;aspect-ratio:7/12;object-fit:cover;border-radius:8px}
+.dlg img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:8px}
 @media (max-width:380px){.dlg{grid-template-columns:1fr}.dlg svg,.dlg img{max-width:120px}}
 .ai{display:flex;flex-direction:column;gap:10px;padding:18px;background:var(--surface);border:1px solid var(--line);border-radius:10px;min-width:0}
 .ai h2{font-family:var(--f-head);font-size:18px;margin:0}
@@ -273,20 +273,24 @@ Object.entries(SUITS).forEach(([key,s])=>s.cards.forEach((c,r)=>DECK.push({
 
 /* ---------- 牌面圖片 ---------- */
 const pad2=n=>String(n).padStart(2,"0");
-function cardSrc(c){
+function cardFile(c){
   return c.arcana==="major"
-    ?`cards/major-${pad2(c.num)}-${MAJOR_SLUG[c.num]}.webp`
-    :`cards/${c.arcana}-${pad2(c.rank+1)}-${RANK_EN[c.rank].toLowerCase()}.webp`;
+    ?`major-${pad2(c.num)}-${MAJOR_SLUG[c.num]}.webp`
+    :`${c.arcana}-${pad2(c.rank+1)}-${RANK_EN[c.rank].toLowerCase()}.webp`;
 }
-function cardImg(c){return `<img src="${cardSrc(c)}" alt="${esc(c.zh)}" loading="lazy">`;}
-const BACK=`<svg viewBox="0 0 140 240" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-<rect x="1" y="1" width="138" height="238" rx="10" fill="var(--back)"/>
-<rect x="8" y="8" width="124" height="224" rx="6" fill="none" stroke="currentColor" stroke-width=".8"/>
+/* 畫面最大約 200px 寬，一律使用 400px 縮圖；首屏的牌用 eager 並提高優先權 */
+function cardImg(c,eager){
+  const load=eager?'fetchpriority="high"':'loading="lazy"';
+  return `<img src="cards/thumb/${cardFile(c)}" alt="${esc(c.zh)}" width="400" height="600" ${load}>`;
+}
+const BACK=`<svg viewBox="0 0 140 210" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+<rect x="1" y="1" width="138" height="208" rx="10" fill="var(--back)"/>
+<rect x="8" y="8" width="124" height="194" rx="6" fill="none" stroke="currentColor" stroke-width=".8"/>
 <g fill="none" stroke="currentColor" stroke-width=".8" opacity=".9">
-<circle cx="70" cy="120" r="40"/><circle cx="70" cy="120" r="28"/>
-<path d="M70 60 L70 180 M10 120 L130 120 M28 78 L112 162 M112 78 L28 162"/>
-<polygon points="70,92 94,134 46,134"/><polygon points="70,148 94,106 46,106"/></g>
-<circle cx="70" cy="120" r="5" fill="currentColor"/></svg>`;
+<circle cx="70" cy="105" r="40"/><circle cx="70" cy="105" r="28"/>
+<path d="M70 45 L70 165 M10 105 L130 105 M28 63 L112 147 M112 63 L28 147"/>
+<polygon points="70,77 94,119 46,119"/><polygon points="70,133 94,91 46,91"/></g>
+<circle cx="70" cy="105" r="5" fill="currentColor"/></svg>`;
 
 /* ---------- 隨機 ---------- */
 function rand(){const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]/4294967296;}
@@ -296,7 +300,7 @@ function dailyCard(key){let h=2166136261;for(const ch of key){h^=ch.charCodeAt(0
 
 /* ---------- 呈現 ---------- */
 const esc=s=>s.replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
-function flipHTML(c){return `<div class="flip-inner"><div class="face back">${BACK}</div><div class="face front">${cardImg(c)}</div></div>`;}
+function flipHTML(c,eager){return `<div class="flip-inner"><div class="face back">${BACK}</div><div class="face front">${cardImg(c,eager)}</div></div>`;}
 function readingHTML(c,pos){
   return `<div class="reading">${pos?`<div class="pos">${pos}</div>`:""}
   <div class="nm">${c.zh}</div><div class="en">${c.en}</div>
@@ -355,7 +359,7 @@ function tarotPrompt({question,cards,labels,spread}){
 // 今日一牌
 (function(){
   const key=todayKey(),c=dailyCard(key),f=document.getElementById("dailyFlip");
-  f.innerHTML=flipHTML(c);f.setAttribute("aria-label",c.zh);
+  f.innerHTML=flipHTML(c,true);f.setAttribute("aria-label",c.zh);
   document.getElementById("dailyReading").innerHTML=`<p class="note">${key}</p>`+readingHTML(c,"今日");
   showAi("aiDaily",tarotPrompt({question:"",cards:[c],labels:["今日一牌"],spread:"今日一牌（日期 "+key+"，同一天固定同一張）"}));
   openLater([f]);
