@@ -1,8 +1,8 @@
 /* 三個頁面共用：色彩、版面、分頁、牌面翻轉、牌義、牌庫、彈窗、AI 區塊。
    各頁可用 --wrap-w、--flip-w、--face-r 覆寫尺寸。字型只用系統字型，不連外部服務。 */
 :root{
-  --bg:#E6EAE4; --surface:#F4F6F2; --ink:#1E3638; --muted:#556866; --line:#C3CCC4;
-  --gold:#9A6F1E; --gold-soft:#E7D7AE; --card:#FBFAF5; --back:#1E3638; --red:#A3392E;
+  --bg:#ECE8F3; --surface:#F6F3FA; --ink:#2E1F4A; --muted:#6A5D80; --line:#CFC6DE;
+  --gold:#7B4FB8; --gold-soft:#DDD0F0; --card:#FBFAFD; --back:#2E1F4A; --red:#A3392E;
   --f-display:Georgia,"Songti TC","PMingLiU",serif;
   --f-head:"Noto Serif TC","Songti TC","Source Han Serif TC","PMingLiU",serif;
   --f-body:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
@@ -10,8 +10,8 @@
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
 }
 @media (prefers-color-scheme:dark){:root{
-  --bg:#111C1C; --surface:#182626; --ink:#DCE4DD; --muted:#93A6A2; --line:#2C3E3D;
-  --gold:#D4A64E; --gold-soft:#3A3220; --card:#1D2B2A; --back:#0B1414; --red:#E0796B; color-scheme:dark}}
+  --bg:#17101F; --surface:#21182E; --ink:#E6DFF0; --muted:#A99BC0; --line:#3A2D4F;
+  --gold:#B995E8; --gold-soft:#3A2A54; --card:#271C37; --back:#0F0A16; --red:#E0796B; color-scheme:dark}}
 [hidden]{display:none!important}
 img{max-width:100%;height:auto}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7}
@@ -70,7 +70,7 @@ input[type=text]{flex:1;min-width:0}
 
 /* 彈窗 */
 dialog{border:0;border-radius:12px;background:var(--bg);color:var(--ink);padding:20px;max-width:min(420px,calc(100vw - 32px));width:100%}
-dialog::backdrop{background:rgba(10,20,20,.55)}
+dialog::backdrop{background:rgba(20,10,35,.55)}
 .dlg{display:grid;grid-template-columns:110px 1fr;gap:16px;align-items:start}
 
 /* 給 AI 解讀 */
