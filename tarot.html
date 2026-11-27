@@ -43,13 +43,7 @@
       <div class="readings" id="dailyReading"></div>
     </div>
     <p class="note">今日一牌依日期計算，同一天打開看到的是同一張；跨日後更換。</p>
-    <section class="ai" id="aiDaily" aria-labelledby="aiDaily-t" hidden>
-      <h2 id="aiDaily-t">給 AI 解讀</h2>
-      <p class="note">已將本次占卜整理成 AI 可讀格式。本頁不會自動送出，貼到哪個 AI 由你決定。</p>
-      <button type="button" class="ai-copy" data-copy="aiDaily">複製提示詞</button>
-      <p class="note" id="aiDaily-s" aria-live="polite"></p>
-      <pre class="ai-box" tabindex="0" role="region" aria-label="AI 解讀提示詞"><code id="aiDaily-p"></code></pre>
-    </section>
+    <section class="ai" id="aiDaily" hidden></section>
   </section>
 
   <section id="view-draw" hidden>
@@ -61,13 +55,7 @@
       <button class="btn ghost" id="drawOne">抽一張</button>
     </div>
     <div id="drawArea" class="readings"></div>
-    <section class="ai" id="aiDraw" aria-labelledby="aiDraw-t" hidden>
-      <h2 id="aiDraw-t">給 AI 解讀</h2>
-      <p class="note">已將本次占卜整理成 AI 可讀格式。本頁不會自動送出，貼到哪個 AI 由你決定。</p>
-      <button type="button" class="ai-copy" data-copy="aiDraw">複製提示詞</button>
-      <p class="note" id="aiDraw-s" aria-live="polite"></p>
-      <pre class="ai-box" tabindex="0" role="region" aria-label="AI 解讀提示詞"><code id="aiDraw-p"></code></pre>
-    </section>
+    <section class="ai" id="aiDraw" hidden></section>
   </section>
 
   <section id="view-lib" hidden>
@@ -85,6 +73,7 @@
   <div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn ghost" id="dlgClose">關閉</button></div>
 </dialog>
 
+<script src="common.js"></script>
 <script>
 const MAJOR = [
 ["愚者","The Fool","新開始、冒險、天真","踏出未知的第一步，保持開放；同時檢查準備是否足夠。"],
@@ -189,11 +178,8 @@ function cardFile(c){
     ?`major-${pad2(c.num)}-${MAJOR_SLUG[c.num]}.webp`
     :`${c.arcana}-${pad2(c.rank+1)}-${RANK_EN[c.rank].toLowerCase()}.webp`;
 }
-/* 畫面最大約 200px 寬，一律使用 400px 縮圖；首屏的牌用 eager 並提高優先權 */
-function cardImg(c,eager){
-  const load=eager?'fetchpriority="high"':'loading="lazy"';
-  return `<img src="cards/thumb/${cardFile(c)}" alt="${esc(c.zh)}" width="400" height="600" ${load}>`;
-}
+/* 翻牌區最寬約 200px；牌庫與彈窗約 120px。實際挑哪一張由 common.js 的 srcset 決定 */
+const face=(c,opt={})=>cardImg(cardFile(c),{alt:c.zh,...opt});
 const BACK=`<svg viewBox="0 0 140 210" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 <rect x="1" y="1" width="138" height="208" rx="10" fill="var(--back)"/>
 <rect x="8" y="8" width="124" height="194" rx="6" fill="none" stroke="currentColor" stroke-width=".8"/>
@@ -203,15 +189,12 @@ const BACK=`<svg viewBox="0 0 140 210" xmlns="http://www.w3.org/2000/svg" aria-h
 <polygon points="70,77 94,119 46,119"/><polygon points="70,133 94,91 46,91"/></g>
 <circle cx="70" cy="105" r="5" fill="currentColor"/></svg>`;
 
-/* ---------- 隨機 ---------- */
-function rand(){const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]/4294967296;}
-function pick(k){const ids=DECK.map(c=>c.id);for(let i=ids.length-1;i>0;i--){const j=Math.floor(rand()*(i+1));[ids[i],ids[j]]=[ids[j],ids[i]];}return ids.slice(0,k).map(i=>DECK[i]);}
-function todayKey(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
-function dailyCard(key){let h=2166136261;for(const ch of key){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return DECK[(h>>>0)%DECK.length];}
+/* ---------- 隨機（rand、shuffle、todayKey、hashKey 在 common.js） ---------- */
+const pick=k=>shuffle(DECK).slice(0,k);
+const dailyCard=key=>DECK[hashKey(key)%DECK.length];
 
 /* ---------- 呈現 ---------- */
-const esc=s=>s.replace(/[&<>"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
-function flipHTML(c,eager){return `<div class="flip-inner"><div class="face back">${BACK}</div><div class="face front">${cardImg(c,eager)}</div></div>`;}
+function flipHTML(c,eager){return `<div class="flip-inner"><div class="face back">${BACK}</div><div class="face front">${face(c,{eager})}</div></div>`;}
 function readingHTML(c,pos){
   return `<div class="reading">${pos?`<div class="pos">${pos}</div>`:""}
   <div class="nm">${c.zh}</div><div class="en">${c.en}</div>
@@ -219,42 +202,7 @@ function readingHTML(c,pos){
   <div class="kw">${c.kw.map(k=>`<span>${k}</span>`).join("")}</div>
   <p>${c.text}</p></div>`;
 }
-function openLater(els){
-  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-  els.forEach((el,i)=>setTimeout(()=>el.classList.add("open"),reduce?0:150+i*350));
-}
-
-/* ---------- 給 AI 解讀：只顯示與複製文字，不送出任何資料 ---------- */
-function showAi(id,text){
-  document.getElementById(id+"-p").textContent=text;   // 問題原樣放入，一律走 textContent
-  document.querySelector("#"+id+" .ai-box").scrollTop=0;
-  document.getElementById(id+"-s").textContent="";
-  document.getElementById(id).hidden=false;
-}
-async function copyText(text){
-  try{await navigator.clipboard.writeText(text);return true;}catch(e){}
-  const a=document.createElement("textarea");a.value=text;a.setAttribute("readonly","");
-  a.style.cssText="position:fixed;left:-9999px;top:0";document.body.appendChild(a);a.select();
-  let ok=false;try{ok=document.execCommand("copy");}catch(e){}
-  a.remove();return ok;
-}
-document.addEventListener("click",async e=>{
-  const b=e.target.closest("[data-copy]");if(!b)return;
-  const id=b.dataset.copy,code=document.getElementById(id+"-p"),s=document.getElementById(id+"-s");
-  const ok=await copyText(code.textContent);
-  s.textContent=ok?"已複製。":"無法自動複製，請在下方框內全選後手動複製。";
-  if(!ok){const r=document.createRange();r.selectNodeContents(code);const sel=getSelection();sel.removeAllRanges();sel.addRange(r);}
-});
-const NO_Q_STEP=["整體局勢","由於沒有具體問題，請以整體局勢與目前最值得注意的主題為主，不要自行假設使用者是在問感情、工作或財務。"];
-const Q_STEP=["直接回答問題","針對【占問問題】給出明確、具體的解讀，不要只講抽象象徵。"];
-const REMIND_STEP=["實際提醒","列出：\n- 現在較有利的做法\n- 現在需要避免的做法\n- 最值得觀察的訊號"];
-function assemble({intro,rules,question,spread,body,steps}){
-  const q=(question||"").trim(),O=["一","二","三","四","五"];
-  const all=steps.concat([q?Q_STEP:NO_Q_STEP,REMIND_STEP]);
-  return [intro,"","重要：",...rules.map((r,i)=>(i+1)+". "+r),"","【占問問題】",q||"未填寫具體問題。","","【牌陣】",spread,"",...body,"",
-    "請依以下順序解讀：","",...all.flatMap(([t,b],i)=>[O[i]+"、"+t,b,""]),
-    "請不要把象徵性解讀描述成已確定會發生的客觀事件。"].join("\n");
-}
+/* ---------- 給 AI 解讀（showAi、assemble 等在 common.js） ---------- */
 function tarotPrompt({question,cards,labels,spread}){
   const multi=cards.length>1;
   const rules=["不要重新抽牌。","不要另外產生隨機牌。","以下牌面就是本次實際結果，只使用正位，請直接依資料解讀。","請區分「傳統塔羅象徵性詮釋」與客觀事實。","塔羅屬象徵性解讀，目前無法以科學方法驗證其預測能力。","【關鍵字】與【本頁牌義】是本網站自撰的簡短說明，不是特定塔羅書的原文，請勿當成經典引用。"];
@@ -300,14 +248,16 @@ showBacks();
 const FILTERS=[["all","全部 78"],["major","大阿爾克那 22"],["wands","權杖 14"],["cups","聖杯 14"],["swords","寶劍 14"],["pentacles","錢幣 14"]];
 const fEl=document.getElementById("filters"),lib=document.getElementById("lib");
 let cur="all";
+/* 篩選按鈕只建立一次，切換時只改 aria-pressed，鍵盤焦點才不會遺失 */
+fEl.innerHTML=FILTERS.map(([k,l])=>`<button class="chip" id="f-${k}" data-f="${k}" aria-pressed="${k===cur}">${l}</button>`).join("");
 function renderLib(){
-  fEl.innerHTML=FILTERS.map(([k,l])=>`<button class="chip" id="f-${k}" data-f="${k}" aria-pressed="${k===cur}">${l}</button>`).join("");
-  lib.innerHTML=DECK.filter(c=>cur==="all"||c.arcana===cur).map(c=>`<button class="lib-card" data-id="${c.id}">${cardImg(c)}<span>${c.zh}</span></button>`).join("");
+  fEl.querySelectorAll("[data-f]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.f===cur));
+  lib.innerHTML=DECK.filter(c=>cur==="all"||c.arcana===cur).map(c=>`<button class="lib-card" data-id="${c.id}">${face(c,{sizes:"120px"})}<span>${c.zh}</span></button>`).join("");
 }
 fEl.onclick=e=>{const b=e.target.closest("[data-f]");if(b){cur=b.dataset.f;renderLib();}};
 const dlg=document.getElementById("dlg");
 lib.onclick=e=>{const b=e.target.closest("[data-id]");if(!b)return;const c=DECK[+b.dataset.id];
-  document.getElementById("dlgArt").innerHTML=cardImg(c);document.getElementById("dlgText").innerHTML=readingHTML(c,"");dlg.showModal();};
+  document.getElementById("dlgArt").innerHTML=face(c,{sizes:"120px"});document.getElementById("dlgText").innerHTML=readingHTML(c,"");dlg.showModal();};
 document.getElementById("dlgClose").onclick=()=>dlg.close();
 dlg.addEventListener("click",e=>{if(e.target===dlg)dlg.close();});
 renderLib();
