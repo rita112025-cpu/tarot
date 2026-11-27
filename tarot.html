@@ -6,6 +6,7 @@
 <meta name="color-scheme" content="light dark">
 <title>七十八張塔羅</title>
 <link rel="stylesheet" href="style.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <style>
 /* 塔羅頁專屬：單張抽牌、牌庫與篩選；共用樣式在 style.css */
 .single{display:grid;grid-template-columns:minmax(0,200px);justify-content:center}
@@ -218,7 +219,7 @@ function tarotPrompt({question,cards,labels,spread}){
 // 今日一牌
 (function(){
   const key=todayKey(),c=dailyCard(key),f=document.getElementById("dailyFlip");
-  f.innerHTML=flipHTML(c,true);f.setAttribute("aria-label",c.zh);
+  f.innerHTML=flipHTML(c,true);f.setAttribute("role","img");f.setAttribute("aria-label",c.zh);
   document.getElementById("dailyReading").innerHTML=`<p class="note">${key}</p>`+readingHTML(c,"今日");
   showAi("aiDaily",tarotPrompt({question:"",cards:[c],labels:["今日一牌"],spread:"今日一牌（日期 "+key+"，同一天固定同一張）"}));
   openLater([f]);
@@ -230,7 +231,7 @@ function draw(n){
   const q=document.getElementById("q").value.trim();
   const cards=pick(n),labels=n===3?["過去","現在","未來"]:["抽到的牌"];
   area.innerHTML=(q?`<p class="question">${esc(q)}</p>`:"")+
-    `<div class="${n===3?"spread":"single"}">${cards.map((c,i)=>`<div class="slot"><div class="slot-label">${labels[i]}</div><div class="flip" aria-label="${c.zh}">${flipHTML(c)}</div></div>`).join("")}</div>`+
+    `<div class="${n===3?"spread":"single"}">${cards.map((c,i)=>`<div class="slot"><div class="slot-label">${labels[i]}</div><div class="flip" role="img" aria-label="${c.zh}">${flipHTML(c)}</div></div>`).join("")}</div>`+
     cards.map((c,i)=>readingHTML(c,labels[i])).join("");
   showAi("aiDraw",tarotPrompt({question:q,cards,labels,spread:n===3?"三張牌：過去・現在・未來":"單張牌"}));
   openLater([...area.querySelectorAll(".flip")]);

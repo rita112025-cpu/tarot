@@ -6,6 +6,7 @@
 <meta name="color-scheme" content="light dark">
 <title>古典雷諾曼</title>
 <link rel="stylesheet" href="style.css">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
 <style>
 /* 雷諾曼頁專屬：牌面、大牌陣與牌庫；共用樣式在 style.css */
 :root{--wrap-w:860px;--flip-w:180px;--face-r:8px}
@@ -143,7 +144,7 @@ const BACK=`<svg viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg" aria-h
 <rect x="6" y="6" width="88" height="138" rx="4" fill="none" stroke="currentColor" stroke-width=".6"/>
 <g fill="none" stroke="currentColor" stroke-width=".7">
 ${[0,1,2,3,4,5].map(r=>[0,1,2,3,4,5].map(c=>`<rect x="${17+c*11}" y="${42+r*11}" width="9" height="9" rx="1"/>`).join("")).join("")}
-</g><text x="50" y="132" text-anchor="middle" font-family="Marcellus SC,Georgia,serif" font-size="9" letter-spacing="2" fill="currentColor">XXXVI</text></svg>`;
+</g><text x="50" y="132" text-anchor="middle" style="font-family:var(--f-display)" font-size="9" letter-spacing="2" fill="currentColor">XXXVI</text></svg>`;
 
 /* ---------- 隨機與日期（rand、shuffle、todayKey、hashKey 在 common.js） ---------- */
 const shuffled=()=>shuffle(DECK);
@@ -180,7 +181,7 @@ function gtPrompt({question,layout,si,nb}){
 // 今日一牌
 (function(){
   const key=todayKey(),c=dailyCard(key),f=document.getElementById("dailyFlip");
-  f.innerHTML=flipHTML(c,true);
+  f.innerHTML=flipHTML(c,true);f.setAttribute("role","img");f.setAttribute("aria-label",c.n+" "+c.zh);
   document.getElementById("dailyReading").innerHTML=`<p class="note">${key}</p>`+readingHTML(c,"今日");
   showAi("aiDaily",lenSimplePrompt({question:"",cards:[c],labels:["今日一牌"],spread:"今日一牌（日期 "+key+"，同一天固定同一張）"}));
   openLater([f]);
@@ -191,7 +192,7 @@ const threeArea=document.getElementById("threeArea");
 function drawThree(){
   const q=document.getElementById("q").value.trim(),cards=shuffled().slice(0,3),labels=["第一張","第二張","第三張"];
   threeArea.innerHTML=(q?`<p class="question">${esc(q)}</p>`:"")+
-    `<div class="spread">${cards.map((c,i)=>`<div class="slot"><div class="slot-label">${labels[i]}</div><div class="flip">${flipHTML(c)}</div></div>`).join("")}</div>`+
+    `<div class="spread">${cards.map((c,i)=>`<div class="slot"><div class="slot-label">${labels[i]}</div><div class="flip" role="img" aria-label="${c.n} ${c.zh}">${flipHTML(c)}</div></div>`).join("")}</div>`+
     `<p class="chain">${cards.map(c=>c.kw[0]).join("　→　")}</p>`+
     `<p class="note">上面一行是三張牌的第一個關鍵字依序串起來，方便你自己組句。</p>`+
     cards.map((c,i)=>readingHTML(c,labels[i])).join("");
